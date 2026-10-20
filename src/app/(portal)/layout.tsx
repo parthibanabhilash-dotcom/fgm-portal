@@ -1,0 +1,10 @@
+import Link from 'next/link';
+import { BriefcaseBusiness as GraduationCap, Sparkles } from 'lucide-react';
+import { pageUser } from '@/lib/auth';
+import { Nav } from '@/components/nav';
+import { logoutAction } from '@/app/actions';
+export const dynamic = 'force-dynamic';
+export default async function PortalLayout({ children }: { children: React.ReactNode }) {
+  const user = await pageUser();
+  return <div className="app-shell"><aside className="sidebar"><Link href="/" className="brand"><span className="brand-mark"><GraduationCap size={25} /></span><span>FGM Training<small>INTERN TRAINING PORTAL</small></span></Link><p className="nav-caption">{user.role === 'ADMIN' ? 'TRAINING MANAGEMENT' : 'YOUR TRAINING SPACE'}</p><Nav admin={user.role === 'ADMIN'} /><div className="sidebar-note"><Sparkles size={20} /><strong>Ready for your role.</strong>Complete your assigned lessons and pass the required exams.</div></aside><div className="workspace"><header className="topbar"><Link href={user.role === 'ADMIN' ? '/admin' : '/dashboard'} className="mobile-brand"><span className="brand-mark"><GraduationCap size={22} aria-hidden="true" /></span><span>FGM Training<small>{user.role === 'ADMIN' ? 'Training management' : 'Your training companion'}</small></span></Link><div className="breadcrumb"><div className="company-name">FIRST GARMENT MFG CO (I) PVT LTD</div>FGM Training <span style={{ margin: '0 10px', color: '#cbd5ce' }}>/</span> {user.role === 'ADMIN' ? 'Administration' : 'Intern portal'}</div><div className="user-menu"><Link href="/profile" aria-label="Open my profile" className="avatar">{user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}</Link><Link href="/profile" className="user-name">{user.name}<small>{user.role === 'ADMIN' ? 'Administrator' : 'Intern account'}</small></Link><form action={logoutAction}><button className="logout">Sign out</button></form></div></header><main id="main" className="main-content">{children}<footer className="footer"><span>© {new Date().getFullYear()} FGM Training</span><span>Learn the role. Build your skills.</span></footer></main></div></div>;
+}

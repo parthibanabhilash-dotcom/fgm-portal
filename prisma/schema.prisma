@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  STUDENT
+  ADMIN
+}
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+}
+enum AnswerRelease {
+  IMMEDIATE
+  AFTER_CLOSE
+  NEVER
+}
+enum AttemptStatus {
+  ACTIVE
+  SUBMITTED
+}
+model User {
+  id           String @id @default(cuid())
+  email        String @unique
+  name         String
+  passwordHash String
+  role         Role @default(STUDENT)
+  active       Boolean @default(true)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  sessions     Session[]
+  enrollments  Enrollment[]
+  progress     LessonProgress[]
+  attempts     ExamAttempt[]
+}
+model Session {
+  tokenHash String @id
+  userId    String
+  expiresAt DateTime @db.Timestamptz(3)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+model RateLimit {
+  key String @id
+  count Int @default(0)
+  resetAt DateTime @db.Timestamptz(3)
+}
+model Course {
+  id          String @id @default(cuid())
+  title       String
+  description String
+  thumbnail   String?
+  category    String
+  instructor  String
+  sequential  Boolean @default(false)
+  status      CourseStatus @default(DRAFT)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  modules     Module[]
+  enrollments Enrollment[]
+  exams       Exam[]
+}
+model Module {
+  id       String @id @default(cuid())
+  title    String
+  position Int
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lessons  Lesson[]
+  @@unique([courseId, position])
+}
+model Lesson {
+  id       String @id @default(cuid())
+  title    String
+  position Int
+  videoUrl String?
+  moduleId String
+  module   Module @relation(fields: [moduleId], references: [id], onDelete: Restrict)
+  note     Note?
+  attachments Attachment[]
+  videoAsset VideoAsset?
+  progress LessonProgress[]
+  exams    Exam[]
+  @@unique([moduleId, position])
+}
+model Note {
+  id String @id @default(cuid())
+  lessonId String @unique
+  markdown String
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+model VideoAsset {
+  id String @id @default(cuid())
+  lessonId String @unique
+  key String @unique
+  name String
+  mime String
+  size Int
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+}
+model Attachment {
+  id String @id @default(cuid())
+  lessonId String
+  name String
+  key String @unique
+  size Int
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+}
+model Enrollment {
+  id String @id @default(cuid())
+  userId String
+  courseId String
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  @@unique([userId, courseId])
+}
+model LessonProgress {
+  id String @id @default(cuid())
+  userId String
+  lessonId String
+  completed Boolean @default(false)
+  position Float @default(0)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  @@unique([userId, lessonId])
+}
+model Exam {
+  id String @id @default(cuid())
+  courseId String
+  lessonId String?
+  title String
+  instructions String
+  durationMinutes Int @default(30)
+  passPercentage Int @default(60)
+  maxAttempts Int @default(3)
+  availableFrom DateTime? @db.Timestamptz(3)
+  availableUntil DateTime? @db.Timestamptz(3)
+  randomize Boolean @default(false)
+  release AnswerRelease @default(IMMEDIATE)
+  published Boolean @default(false)
+  archived Boolean @default(false)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  lesson Lesson? @relation(fields: [lessonId], references: [id], onDelete: Restrict)
+  questions Question[]
+  attempts ExamAttempt[]
+  @@index([courseId])
+}
+model Question {
+  id String @id @default(cuid())
+  examId String
+  text String
+  marks Int @default(1)
+  position Int
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+  choices Choice[]
+  @@unique([examId, position])
+}
+model Choice {
+  id String @id @default(cuid())
+  questionId String
+  text String
+  correct Boolean @default(false)
+  position Int
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  @@unique([questionId, position])
+}
+model ExamAttempt {
+  id String @id @default(cuid())
+  examId String
+  userId String
+  status AttemptStatus @default(ACTIVE)
+  startedAt DateTime @default(now()) @db.Timestamptz(3)
+  deadline DateTime @db.Timestamptz(3)
+  submittedAt DateTime? @db.Timestamptz(3)
+  snapshot Json
+  score Float?
+  passed Boolean?
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Restrict)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  answers StudentAnswer[]
+  @@index([status, deadline])
+  @@index([userId, examId])
+}
+model StudentAnswer {
+  id String @id @default(cuid())
+  attemptId String
+  questionId String
+  choiceId String
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+  @@unique([attemptId, questionId])
+}
