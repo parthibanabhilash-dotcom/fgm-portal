@@ -128,3 +128,24 @@
 .topbar{border-top:6px solid #85847f}.sidebar{border-top:6px solid #127c4b}.brand{color:#2e825a}.main-nav a.active{background:#127c4b;color:#fff}.auth-brand{border-top:8px solid #85847f}.auth-brand .brand{color:#fff}.company-name{font-size:11px;font-weight:700;letter-spacing:.3px;color:#2e825a}.auth-company{font-size:12px;letter-spacing:.3px;color:#fff;margin-top:20px}.sidebar .brand small{font-size:7px;letter-spacing:1px}@media(max-width:640px){.topbar{height:auto;min-height:70px;padding:12px 18px}.company-name{font-size:9px;max-width:220px}.breadcrumb{line-height:1.5}}
 
 @media(max-width:640px){.page-heading{flex-direction:column;align-items:stretch}.page-heading>.button{align-self:flex-start}.table-wrap table{min-width:620px}}
+
+/* Motion uses opacity and transform only, keeping scrolling smooth on phones. */
+:root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-fast:180ms;--motion-base:520ms}
+.button,.course-card,.course-art,.course-art:after,.text-link,.main-nav a,.avatar,.logout,.tabs button,.lesson-link,.question label,.stat,.panel,.details,.brand-mark{transition-property:transform,box-shadow,background-color,border-color,color,opacity;transition-duration:var(--motion-fast);transition-timing-function:var(--motion-ease)}
+.button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 18px #0d60392b}.button:active:not(:disabled){transform:translateY(0) scale(.98);box-shadow:none}
+.text-link:hover{color:#0d6039;text-decoration:none;transform:translateX(2px)}
+.main-nav a:hover{transform:translateX(3px)}.main-nav a.active{box-shadow:0 3px 10px #127c4b18}
+.avatar:hover{transform:scale(1.08);box-shadow:0 4px 12px #127c4b22}.logout:hover{color:var(--brand);transform:translateY(-1px)}
+.course-card:hover{transform:translateY(-5px);border-color:#c8ddcf;box-shadow:0 16px 30px #173a2614}.course-card:hover .course-art{transform:scale(1.025)}.course-card:hover .course-art:after{transform:scale(1.1)}
+.course-art{transition-duration:420ms}.stat:hover,.panel:hover,.details:hover{border-color:#d0e1d6;box-shadow:0 8px 22px #173a260b}.stat:hover{transform:translateY(-2px)}
+.lesson-link:hover{background:#f1f7f3;transform:translateX(3px)}.tabs button:hover{color:var(--brand);background:#f3f8f5}.question label:hover{border-color:#b9d8c4;transform:translateX(2px)}
+.hero{isolation:isolate}.hero:after{content:'';position:absolute;z-index:-1;width:260px;height:260px;right:-88px;bottom:-158px;border-radius:50%;border:1px solid #b9d8c4;background:#ffffff2e;transform:translate3d(0,var(--parallax-y,0px),0);will-change:transform}.hero-art{animation:float 5.5s var(--motion-ease) infinite}.hero-art svg{transition:transform 420ms var(--motion-ease)}.hero:hover .hero-art svg{transform:rotate(-4deg) scale(1.06)}
+.auth-brand:before{content:'';position:absolute;width:280px;height:280px;right:-120px;bottom:-155px;border:1px solid #ffffff2f;border-radius:50%;animation:float 7s var(--motion-ease) infinite reverse}.auth-brand>*{position:relative;z-index:1}
+.motion-ready [data-reveal=true]{opacity:0;transform:translate3d(0,20px,0);transition:opacity var(--motion-base) var(--motion-ease) var(--reveal-delay,0ms),transform var(--motion-base) var(--motion-ease) var(--reveal-delay,0ms)}
+.motion-ready [data-reveal=true].is-revealed{opacity:1;transform:translate3d(0,0,0)}
+.motion-ready .page-heading h1,.motion-ready .hero h2{animation:text-reveal 620ms var(--motion-ease) both}.route-enter{animation:page-enter 360ms var(--motion-ease) both}
+@keyframes page-enter{from{opacity:.65;transform:translate3d(0,8px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes text-reveal{from{opacity:0;transform:translate3d(0,15px,0);clip-path:inset(0 0 100% 0)}to{opacity:1;transform:translate3d(0,0,0);clip-path:inset(0 0 0 0)}}
+@keyframes float{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-8px,0)}}
+@media(max-width:768px){.main-nav a:hover{transform:none}.course-card:hover{transform:translateY(-2px)}.hero-art{animation:none}.motion-ready [data-reveal=true]{transform:translate3d(0,14px,0)}.course-card:active{transform:scale(.985)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.motion-ready [data-reveal=true]{opacity:1;transform:none}.hero:after{transform:none}}
