@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 import type { User } from '@prisma/client';
 import { db } from './db';
 import { HttpError } from './http';
@@ -31,12 +32,14 @@ export async function configuredAdminOnLogin(address: string, suppliedPassword: 
     return tx.user.create({ data: { email: address, name: configuredName, role: 'ADMIN', passwordHash: await bcrypt.hash(configuredPassword, 12) } });
   });
 }
-export async function currentUser() {
+// A portal layout and its page often need the signed-in user. React cache keeps
+// that lookup to one database query for the lifetime of a server render.
+export const currentUser = cache(async function currentUser() {
   const token = (await cookies()).get('lkp_session')?.value;
   if (!token) return null;
   const session = await db.session.findUnique({ where: { tokenHash: hashToken(token) }, include: { user: true } });
   return session && session.expiresAt > new Date() && session.user.active ? session.user : null;
-}
+});
 export async function requireUser(): Promise<User> {
   const user = await currentUser();
   if (!user) throw new HttpError(401, 'Please sign in to continue.');
