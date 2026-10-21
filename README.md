@@ -171,3 +171,10 @@ Playwright launches the production build on port **3100**, sets the matching ori
 Admin course rows have Edit course and Delete course actions. Each exam has Edit exam and Delete exam controls on the course page. Delete requires confirmation and archives content, preserving enrollments, progress, and exam history. Deleted / archived sections allow restoring courses through publication settings, or exams as drafts.
 
 Mobile interface: screens up to 768px use a fixed bottom navigation bar, compact sticky header, safe-area spacing, large touch controls, collapsible lesson outline, and card-style intern result history. Exam timers remain sticky below the header. The portal is a responsive web application; native app installation and offline course playback are not included.
+
+
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | admin@lkpacademy.test | `AdminDemo!2026` |
+| Student | student@lkpacademy.test | `StudentDemo!2026` |
