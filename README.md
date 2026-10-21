@@ -172,6 +172,8 @@ Admin course rows have Edit course and Delete course actions. Each exam has Edit
 
 Mobile interface: screens up to 768px use a fixed bottom navigation bar, compact sticky header, safe-area spacing, large touch controls, collapsible lesson outline, and card-style intern result history. Exam timers remain sticky below the header. The portal is a responsive web application; native app installation and offline course playback are not included.
 
+For Vercel, set `APP_URL` to the exact deployed production origin, such as `https://fgm-portal.vercel.app` (no trailing path). The application also accepts Vercel's system-provided production, branch, and deployment URLs for same-origin form submissions. Redeploy after changing environment variables.
+
 
 
 | Role | Email | Password |

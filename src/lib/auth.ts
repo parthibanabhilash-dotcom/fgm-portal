@@ -33,9 +33,22 @@ export async function createSession(userId: string) {
   await db.session.create({ data: { tokenHash: hashToken(token), userId, expiresAt } });
   (await cookies()).set('lkp_session', token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', expires: expiresAt });
 }
+function originFrom(value: string | undefined) {
+  if (!value) return null;
+  try { return new URL(value.includes('://') ? value : `https://${value}`).origin; }
+  catch { return null; }
+}
+export function allowedOrigins(env: Record<string, string | undefined> = process.env) {
+  return new Set([
+    originFrom(env.APP_URL),
+    originFrom(env.VERCEL_PROJECT_PRODUCTION_URL),
+    originFrom(env.VERCEL_BRANCH_URL),
+    originFrom(env.VERCEL_URL)
+  ].filter((value): value is string => !!value));
+}
 export async function assertOrigin() {
   const origin = (await headers()).get('origin');
-  if (!process.env.APP_URL || origin !== new URL(process.env.APP_URL).origin) throw new HttpError(403, 'Request origin is not allowed.');
+  if (!origin || !allowedOrigins().has(origin)) throw new HttpError(403, 'Request origin is not allowed.');
 }
 export async function consumeRateLimit(key: string, limit = 10) {
   // Atomic upsert is shared across application processes. No client-controlled IP headers.
