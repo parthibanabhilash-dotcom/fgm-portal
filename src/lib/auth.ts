@@ -10,7 +10,7 @@ function sameSecret(left: string, right: string) {
   const a = Buffer.from(left), b = Buffer.from(right);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-export async function bootstrapAdminOnFirstLogin(address: string, suppliedPassword: string) {
+export async function configuredAdminOnLogin(address: string, suppliedPassword: string) {
   const configuredEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const configuredName = process.env.ADMIN_NAME?.trim();
   const configuredPassword = process.env.ADMIN_PASSWORD;
@@ -18,7 +18,15 @@ export async function bootstrapAdminOnFirstLogin(address: string, suppliedPasswo
   return db.$transaction(async tx => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(41972611)`;
     const existing = await tx.user.findUnique({ where: { email: address } });
-    if (existing) return existing.role === 'ADMIN' ? existing : null;
+    if (existing) {
+      if (existing.role !== 'ADMIN') return null;
+      if (!await bcrypt.compare(configuredPassword, existing.passwordHash)) {
+        const passwordHash = await bcrypt.hash(configuredPassword, 12);
+        await tx.session.deleteMany({ where: { userId: existing.id } });
+        return tx.user.update({ where: { id: existing.id }, data: { name: configuredName, passwordHash } });
+      }
+      return existing;
+    }
     if (await tx.user.count({ where: { role: 'ADMIN' } })) return null;
     return tx.user.create({ data: { email: address, name: configuredName, role: 'ADMIN', passwordHash: await bcrypt.hash(configuredPassword, 12) } });
   });

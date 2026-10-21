@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
-import { assertOrigin, bootstrapAdminOnFirstLogin, consumeRateLimit, createSession, hashToken, requireAdmin, requireUser } from '@/lib/auth';
+import { assertOrigin, configuredAdminOnLogin, consumeRateLimit, createSession, hashToken, requireAdmin, requireUser } from '@/lib/auth';
 import { HttpError } from '@/lib/http';
 import { courseSchema, email, examSchema, httpsUrl, password, text } from '@/lib/validation';
 import { uploadPdf } from '@/lib/storage';
@@ -27,7 +27,7 @@ export async function loginAction(_: ActionState, f: FormData): Promise<ActionSt
     const address = email.parse(value(f, 'email'));
     await consumeRateLimit(`login:${address}`);
     const supplied = z.string().min(1).max(256).parse(value(f, 'password'));
-    const user = await db.user.findUnique({ where: { email: address } }) ?? await bootstrapAdminOnFirstLogin(address, supplied);
+    const user = await configuredAdminOnLogin(address, supplied) ?? await db.user.findUnique({ where: { email: address } });
     const match = await bcrypt.compare(supplied, user?.passwordHash ?? '$2b$12$Gz0W5jDrmxg3uG.QCj.EuehFUrMB3YL5u55LqFjmST3QRUtDyqh8a');
     if (!user?.active || !match) throw new HttpError(401, 'Invalid email or password.');
     await createSession(user.id);

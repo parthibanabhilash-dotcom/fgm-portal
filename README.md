@@ -190,7 +190,7 @@ ADMIN_PASSWORD=use-a-unique-password-of-at-least-12-characters
 
 The `vercel-build` script generates Prisma Client, applies committed migrations, and creates the initial administrator only when no user exists with `ADMIN_EMAIL`. Later deployments preserve the administrator and password. Remove `ADMIN_PASSWORD` from Vercel after the first successful deployment if you do not want to retain it there.
 
-As a deployment fallback, the first login with the exact configured `ADMIN_EMAIL` and `ADMIN_PASSWORD` creates the administrator when the database has no administrator yet. It never promotes an existing intern account and stops bootstrapping after an administrator exists. Remove `ADMIN_PASSWORD` after the first successful admin login.
+As a deployment fallback, a login with the exact configured `ADMIN_EMAIL` and `ADMIN_PASSWORD` creates the administrator when the database has no administrator yet. If that configured administrator already exists, it securely synchronizes its name and password and revokes old sessions. It never promotes an existing intern account or creates an additional bootstrap administrator after another administrator exists. Remove `ADMIN_PASSWORD` after the first successful admin login.
 
 
 
