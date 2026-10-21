@@ -1,10 +1,28 @@
 import { cookies, headers } from 'next/headers';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import type { User } from '@prisma/client';
 import { db } from './db';
 import { HttpError } from './http';
 export const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
+function sameSecret(left: string, right: string) {
+  const a = Buffer.from(left), b = Buffer.from(right);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+export async function bootstrapAdminOnFirstLogin(address: string, suppliedPassword: string) {
+  const configuredEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const configuredName = process.env.ADMIN_NAME?.trim();
+  const configuredPassword = process.env.ADMIN_PASSWORD;
+  if (!configuredEmail || !configuredName || !configuredPassword || address !== configuredEmail || !sameSecret(suppliedPassword, configuredPassword)) return null;
+  return db.$transaction(async tx => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(41972611)`;
+    const existing = await tx.user.findUnique({ where: { email: address } });
+    if (existing) return existing.role === 'ADMIN' ? existing : null;
+    if (await tx.user.count({ where: { role: 'ADMIN' } })) return null;
+    return tx.user.create({ data: { email: address, name: configuredName, role: 'ADMIN', passwordHash: await bcrypt.hash(configuredPassword, 12) } });
+  });
+}
 export async function currentUser() {
   const token = (await cookies()).get('lkp_session')?.value;
   if (!token) return null;
