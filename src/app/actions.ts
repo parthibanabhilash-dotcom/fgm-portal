@@ -17,6 +17,7 @@ function message(e: unknown): ActionState {
   if (e instanceof ZodError) return { error: e.issues.map(i => i.message).join('; ') };
   if (e instanceof HttpError) return { error: e.message };
   if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return { error: 'This record already exists.' };
+  if (e instanceof Prisma.PrismaClientInitializationError || (e instanceof Prisma.PrismaClientKnownRequestError && ['P1001', 'P2021'].includes(e.code))) return { error: 'Training database is not ready. Please contact the administrator.' };
   console.error(e); return { error: 'Unable to save. Please check your input and try again.' };
 }
 export async function loginAction(_: ActionState, f: FormData): Promise<ActionState> {

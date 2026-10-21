@@ -174,6 +174,22 @@ Mobile interface: screens up to 768px use a fixed bottom navigation bar, compact
 
 For Vercel, set `APP_URL` to the exact deployed production origin, such as `https://fgm-portal.vercel.app` (no trailing path). The application also accepts Vercel's system-provided production, branch, and deployment URLs for same-origin form submissions. Redeploy after changing environment variables.
 
+### Vercel database setup
+
+Vercel does not include the local PostgreSQL database. Connect a managed PostgreSQL provider from the Vercel Marketplace (or supply another hosted PostgreSQL connection) and expose its Prisma-compatible connection string as `DATABASE_URL` for Production and Preview. Do not use `localhost` in Vercel.
+
+Set these server environment variables before redeploying:
+
+```text
+DATABASE_URL=postgresql://...hosted-database...
+APP_URL=https://your-production-domain.example
+ADMIN_EMAIL=your-admin-email@example.com
+ADMIN_NAME=Training Administrator
+ADMIN_PASSWORD=use-a-unique-password-of-at-least-12-characters
+```
+
+The `vercel-build` script generates Prisma Client, applies committed migrations, and creates the initial administrator only when no user exists with `ADMIN_EMAIL`. Later deployments preserve the administrator and password. Remove `ADMIN_PASSWORD` from Vercel after the first successful deployment if you do not want to retain it there.
+
 
 
 | Role | Email | Password |
